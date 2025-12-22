@@ -16,3 +16,6 @@ class Packet:
             ok = False
         #if anything else to check
         return ok
+    
+    def altitude(self, p0=101325):
+        return 44330 * (1 - (self.pre / p0) ** 0.1903)

@@ -1,7 +1,10 @@
 import csv 
 from packet import Packet
+from stati import Packetstat
 
 FILEPATH = "dataset.csv"
+
+stati = Packetstat()
 
 f = open(FILEPATH,"r")
 
@@ -34,9 +37,12 @@ for row in reader:
     packet = Packet(data["t"],data["pre"],data["ax"],data["ay"],data["az"])
     
     if packet.validate():
-        print("accept")
+        alti = packet.altitude()
+        print(alti)
+        stati.accept()
     else:
         print("reject")
+        stati.reject()
         continue
 
 
