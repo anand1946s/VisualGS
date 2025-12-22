@@ -2,6 +2,7 @@ import csv
 from packet import Packet
 from stati import Packetstat
 
+
 FILEPATH = "dataset.csv"
 
 stati = Packetstat()
@@ -39,11 +40,11 @@ for row in reader:
     if packet.validate():
         alti = packet.altitude()
         print(alti)
-        stati.accept()
+        stati.accept(packet) #also add to accept.csv
     else:
         print("reject")
-        stati.reject()
+        stati.reject(packet) # to reject.csv
         continue
-
+stati.summary()
 
 

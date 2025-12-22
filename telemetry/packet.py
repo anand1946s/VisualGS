@@ -11,9 +11,11 @@ class Packet:
         ok = True
         if self.t<0:
             ok = False
+            self.error = "Neg time"
 
         if self.pre <0 :
             ok = False
+            self.error = "Neg pressure"
         #if anything else to check
         return ok
     
