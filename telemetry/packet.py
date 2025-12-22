@@ -1,0 +1,18 @@
+class Packet:
+    def __init__(self,t,pre,ax,ay,az):
+        self.t = t
+        self.pre = pre
+        self.ax = ax
+        self.ay = ay
+        self.az = az
+
+
+    def validate(self):
+        ok = True
+        if self.t<0:
+            ok = False
+
+        if self.pre <0 :
+            ok = False
+        #if anything else to check
+        return ok
