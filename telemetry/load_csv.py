@@ -1,50 +1,54 @@
-import csv 
-from packet import Packet
-from stati import Packetstat
+import csv
+from .packet import Packet
+from .stati import Packetstat
+from .plotter import Plotter
 
 
-FILEPATH = "dataset.csv"
+def run_csv(filepath="dataset.csv"):
+    stati = Packetstat()
+    accepted_packets = []
 
-stati = Packetstat()
+    with open(filepath, "r") as f:
+        reader = csv.reader(f)
+        next(reader)  # skip header
 
-f = open(FILEPATH,"r")
+        for row in reader:
+            data = csv_to_dict(row)
 
-reader = csv.reader(f)
+            if data is None:
+                print("reject: malformed row")
+                continue
+
+            packet = Packet(
+                data["t"],
+                data["pre"],
+                data["ax"],
+                data["ay"],
+                data["az"]
+            )
+
+            if packet.validate():
+                alti = packet.altitude()
+                print(alti)
+                stati.accept(packet)
+                accepted_packets.append(packet)
+            else:
+                print("reject")
+                stati.reject(packet)
+
+    plot_instance = Plotter(accepted_packets)
+    plot_instance.pre_vs_t()
+    stati.summary()
 
 
 def csv_to_dict(row):
     try:
         return {
-        "t": int(row[0]),
-        "pre": float(row[1]),
-        "ax": float(row[2]),
-        "ay": float(row[3]),
-        "az": float(row[4])
-
-    }
-
-    except (ValueError,IndexError):
+            "t": int(row[0]),
+            "pre": float(row[1]),
+            "ax": float(row[2]),
+            "ay": float(row[3]),
+            "az": float(row[4]),
+        }
+    except (ValueError, IndexError):
         return None
-    
-
-
-next(reader)
-for row in reader:
-    data = csv_to_dict(row)
-
-    if data is None:
-        print("reject: malformed row")
-        continue
-    packet = Packet(data["t"],data["pre"],data["ax"],data["ay"],data["az"])
-    
-    if packet.validate():
-        alti = packet.altitude()
-        print(alti)
-        stati.accept(packet) #also add to accept.csv
-    else:
-        print("reject")
-        stati.reject(packet) # to reject.csv
-        continue
-stati.summary()
-
-

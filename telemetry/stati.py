@@ -15,7 +15,7 @@ class Packetstat:
         self.total+=1
         self.accepted+=1
 
-        self.fr.write(f"{packet.t},{packet.pre},{packet.ax},{packet.ay},{packet.az}\n")
+        self.fa.write(f"{packet.t},{packet.pre},{packet.ax},{packet.ay},{packet.az}\n")
 
     def reject(self,packet):
         self.total+=1
