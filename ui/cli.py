@@ -13,7 +13,7 @@ from telemetry.load_csv import run_csv
 
 while True:
     print("=== Telemetry Processor ===")
-    print("1: Load CSV")
+    print("1: Run Replay")
     print("2: Live Serial")
     print("3: Run Health Checkup")
     print("4: Exit")
@@ -25,11 +25,21 @@ while True:
         continue
 
     if choice == 1:
-        run_csv(mode = "csv", filepath="telemetry/dataset.csv")
+        try:
+            speed = float(input ("Enter speed in x"))
+        except ValueError:
+            print("Require valid input !!!")
+            continue
+        if speed <= 0 :
+            print("Cant be negative")
+            continue
+        
+
+        run_csv(mode = "replay", filepath="telemetry/dataset.csv" , speed = speed)
 
     elif choice == 2:
         print("Reading live serial data...  ")
-        run_csv(mode = "serial")  # this needs to be implemented in load_csv.py
+        run_csv(mode = "serial")  
 
     elif choice == 3:
         com = input("Enter COM No (e.g. 3): ")

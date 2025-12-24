@@ -1,16 +1,17 @@
-import csv
+import csv , time
 from .packet import Packet
 from .stati import Packetstat
 from .plotter import Plotter
 from .serialize import Serialize
 
 
-def run_csv(mode = "csv",filepath = "dataset.csv"):
+def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
     stati = Packetstat()
     accepted_packets = []
 
 
-    if mode == "csv" :
+    if mode == "replay" :
+        prev_t = None
         with open(filepath, "r") as f:
             reader = csv.reader(f)
             next(reader)  # skip header
@@ -22,19 +23,23 @@ def run_csv(mode = "csv",filepath = "dataset.csv"):
                     print("reject: malformed row")
                     continue
 
-                packet = Packet(
-                    data["t"],
-                    data["pre"],
-                    data["ax"],
-                    data["ay"],
-                    data["az"]
-                )
+                packet = Packet(data["t"],data["pre"],data["ax"],data["ay"],data["az"])
+
+                if prev_t is not None:
+                    dt = packet.t - prev_t
+                    if dt >0:
+                        time.sleep((dt/speed)/1000)
+                prev_t = packet.t
 
                 if packet.validate():
                     #alti = packet.altitude()
                     #print(alti)
                     stati.accept(packet)
                     accepted_packets.append(packet)
+
+                    #print(f"time={packet.t} ms | pre={packet.pre} Pa | ax={packet.ax} | ay={packet.ay} | az={packet.az}")
+
+
                 else:
                     print("reject")
                     stati.reject(packet)
