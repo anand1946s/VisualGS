@@ -42,20 +42,32 @@ def run_csv(mode = "csv",filepath = "dataset.csv"):
     elif mode == "serial":
         print("Waiting for USB...")
         # next we implement cli to recieve com and baud grm  user
-        seri = Serialize(port = "COM3",baudrate=9600)   
+        com = input("Enter COM No: ")
+        try:
+            baud = int(input("Enter baudrate"))
+        except ValueError:
+            print("Enter valid number")
+            return
+
+        seri = Serialize(port = f"COM{com}",baudrate=baud)   
         try:
             seri.open()
         except RuntimeError:
             print("Access Denied to COM!!!")
             return
         
-        for packet in seri.packets():
-            if packet.validate():
-                stati.accept(packet)
-                accepted_packets.append(packet)
-            else:
-                stati.reject(packet)  
-                #also this never stops.so need a mechanism to halt this after n sec of inactivity.     
+        try:
+            for packet in seri.packets():
+                if packet.validate():
+                    stati.accept(packet)
+                    accepted_packets.append(packet)
+                else:
+                    stati.reject(packet)  
+             
+        except KeyboardInterrupt:
+            print("Stopping Serial...")
+        finally:
+            seri.close()   
 
 
     plot_instance = Plotter(accepted_packets)

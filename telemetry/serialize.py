@@ -6,6 +6,7 @@ class Serialize:
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
+        self.ser = None
 
     def open(self):
         try:
@@ -18,6 +19,27 @@ class Serialize:
     def close(self):
         if self.ser and self.ser.is_open:
             self.ser.close()
-    def packets():
-        pass
+    def packets(self):
+        if self.ser is None:
+            raise RuntimeError("Serial port not opened")
+        
+        try:
+            while True:
+                raw = self.ser.readlines()
+
+                if not raw:
+                    continue  # timeout, no data
+
+                try:
+                    line = raw.decode("utf-8").strip()
+                except UnicodeDecodeError:
+                    continue
+
+                if not line:
+                    continue
+
+                yield line
+
+        finally:
+            self.close()
     

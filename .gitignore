@@ -1,0 +1,54 @@
+# ----------------------------
+# Python cache / bytecode
+# ----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ----------------------------
+# Virtual environments
+# ----------------------------
+.venv/
+venv/
+env/
+
+# ----------------------------
+# OS / Editor junk
+# ----------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ----------------------------
+# Generated data / outputs
+# ----------------------------
+*.csv
+!telemetry/dataset.csv
+*.png
+
+# (If you later want to keep example CSVs, whitelist them explicitly)
+
+# ----------------------------
+# Logs / runtime artifacts
+# ----------------------------
+*.log
+
+# ----------------------------
+# Serial / temporary files
+# ----------------------------
+*.tmp
+
+# ----------------------------
+# Python build artifacts
+# ----------------------------
+build/
+dist/
+*.egg-info/
+
+# ----------------------------
+# Lock files (optional choice)
+# ----------------------------
+# Uncomment if you don't want to commit uv.lock
+# uv.lock
