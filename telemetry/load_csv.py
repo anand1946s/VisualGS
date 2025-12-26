@@ -1,4 +1,7 @@
 import csv , time, os, sys
+from rich.console import Console
+from rich.table import Table
+from rich.live import Live
 from .packet import Packet
 from .stati import Packetstat
 from .plotter import Plotter
@@ -7,14 +10,13 @@ from .serialize import find_ports , update_status_line
 
 
 def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
+    console = Console()
     stati = Packetstat()
     accepted_packets = []
 
 
     if mode == "replay":
 
-        os.system("cls" if os.name == "nt" else "clear")
-        draw_flight_box()
         last_lat = None
         last_lon = None
 
@@ -22,57 +24,66 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
         prev_packet = None
         prev_vel = 0.0
 
-        with open(filepath, "r") as f:
-            reader = csv.reader(f)
-            next(reader)
+        with Live(console=console, refresh_per_second=10) as live:
+            with open(filepath, "r") as f:
+                reader = csv.reader(f)
+                next(reader)
 
-            for row in reader:
-                data = csv_to_dict(row)
-                if data is None:
-                    stati.malformed()
-                    continue
+                for row in reader:
+                    data = csv_to_dict(row)
+                    if data is None:
+                        stati.malformed()
+                        continue
 
-                packet = Packet(data["t"], data["pre"], data["ax"], data["ay"], data["az"],data["lat"],data["lon"])
-
-                if packet.lat is not None and packet.lon is not None:
-                    last_lat = packet.lat
-                    last_lon = packet.lon
-
-
-                if prev_t is not None:
-                    dt = packet.t - prev_t
-                    if dt > 0:
-                        time.sleep((dt / speed) / 1000)
-                prev_t = packet.t
-
-                if packet.validate():
-                    stati.accept(packet)
-                    accepted_packets.append(packet)
-
-                    vel = compute_velocity(prev_packet, packet) if prev_packet else 0.0
-                    alt = packet.altitude()
-
-                    state = detect_flight_state(
-                    alt=packet.altitude(),
-                    vel=vel,
-                    prev_vel=prev_vel
+                    packet = Packet(
+                        data["t"],
+                        data["pre"],
+                        data["ax"],
+                        data["ay"],
+                        data["az"],
+                        data["lat"],
+                        data["lon"],
                     )
 
-                    update_flight_box(
+                    if packet.lat is not None and packet.lon is not None:
+                        last_lat = packet.lat
+                        last_lon = packet.lon
+
+                    if prev_t is not None:
+                        dt = packet.t - prev_t
+                        if dt > 0:
+                            time.sleep((dt / speed) / 1000)
+                    prev_t = packet.t
+
+                    if packet.validate():
+                        stati.accept(packet)
+                        accepted_packets.append(packet)
+
+                        vel = compute_velocity(prev_packet, packet) if prev_packet else 0.0
+                        alt = packet.altitude()
+
+                        state = detect_flight_state(
+                            alt=alt,
+                            vel=vel,
+                            prev_vel=prev_vel,
+                        )
+
+                        table = make_flight_table(
                             t=packet.t,
                             alt=alt,
                             vel=vel,
                             state=state,
                             lat=last_lat,
-                            lon=last_lon
+                            lon=last_lon,
                         )
 
-                    
-                    prev_vel = vel
+                        live.update(table)
 
-                    prev_packet = packet
-                else:
-                    stati.reject(packet)
+                        prev_vel = vel
+                        prev_packet = packet
+                    else:
+                        stati.reject(packet)
+
 
         print()  # finalize box before summary
 
@@ -150,6 +161,30 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
     plot_instance.acc_mag_vs_t()
     plot_instance.alt_vs_t()
     plot_instance.vel_vs_t()
+
+
+def make_flight_table(t, alt, vel, state, lat=None, lon=None):
+    table = Table(
+        title="VisualGS – Flight Monitor",
+        expand=True,
+        show_header=False,
+        border_style="cyan"
+    )
+
+    table.add_column("Field", style="bold cyan", width=12)
+    table.add_column("Value", style="white")
+
+    table.add_row("Time (ms)", f"{t}")
+    table.add_row("Altitude (m)", f"{alt:.1f}")
+    table.add_row("Velocity (m/s)", f"{vel:+.2f}")
+    table.add_row("State", f"[bold yellow]{state}[/]")
+
+    if lat is not None and lon is not None:
+        table.add_row("GPS", f"{lat:.5f}, {lon:.5f}")
+    else:
+        table.add_row("GPS", "---")
+
+    return table
 
 
 def csv_to_dict(row):
