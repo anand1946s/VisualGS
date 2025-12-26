@@ -12,5 +12,5 @@ dependencies = [
 [project.scripts]
 visualgs = "ui.cli:main"
 
-[tool.setuptools]
-packages = ["ui", "telemetry", "health"]
+[tool.setuptools.packages.find]
+where = ["."]

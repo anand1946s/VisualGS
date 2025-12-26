@@ -58,3 +58,6 @@ dist/
 # Lock files
 # ----------------------------
 # uv.lock   # uncomment if you decide to ignore it
+
+
+*. uv.lock
