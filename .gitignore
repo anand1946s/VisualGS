@@ -22,22 +22,29 @@ Thumbs.db
 .idea/
 
 # ----------------------------
-# Generated data / outputs
+# Runtime-generated outputs
+# ----------------------------
+.visualgs/
+datasets/
+plots/
+
+# ----------------------------
+# Generated data (general)
 # ----------------------------
 *.csv
-!telemetry/dataset.csv
 *.png
 
-# (If you later want to keep example CSVs, whitelist them explicitly)
+# ----------------------------
+# Whitelisted example data
+# ----------------------------
+!dataset.csv
+# OR (better)
+# !examples/*.csv
 
 # ----------------------------
-# Logs / runtime artifacts
+# Logs / temp files
 # ----------------------------
 *.log
-
-# ----------------------------
-# Serial / temporary files
-# ----------------------------
 *.tmp
 
 # ----------------------------
@@ -48,7 +55,6 @@ dist/
 *.egg-info/
 
 # ----------------------------
-# Lock files (optional choice)
+# Lock files
 # ----------------------------
-# Uncomment if you don't want to commit uv.lock
-# uv.lock
+# uv.lock   # uncomment if you decide to ignore it

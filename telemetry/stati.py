@@ -1,7 +1,12 @@
+from pathlib import Path
+
+base = Path("datasets")
+base.mkdir(parents=True, exist_ok=True)
+
 class Packetstat:
     def __init__(self):
-        self.fa = open("accept.csv","w")
-        self.fr = open("reject.csv","w")
+        self.fa = open(base / "accept.csv", "w", newline="")
+        self.fr = open(base / "reject.csv", "w", newline="")
         
 
         self.fa.write("t,pre,ax,ay,az\n")

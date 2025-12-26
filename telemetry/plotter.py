@@ -1,5 +1,10 @@
+from pathlib import Path
 import matplotlib.pyplot as plt
 import math
+
+PLOT_DIR = Path("plots")
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class Plotter:
     def __init__(self,packets):
@@ -22,7 +27,7 @@ class Plotter:
         plt.xlabel("Time(ms)")
         plt.ylabel("Pressure")
         plt.title("Pressure vs Time")
-        plt.savefig("pressure_vs_time.png")
+        plt.savefig(PLOT_DIR / "pressure_vs_time.png")
         plt.close()
 
     def alt_vs_t(self):
@@ -30,7 +35,7 @@ class Plotter:
         plt.xlabel("Time (ms)")
         plt.ylabel("Altitude (m)")
         plt.title("Altitude vs Time")
-        plt.savefig("altitude_vs_time.png")
+        plt.savefig(PLOT_DIR / "Alt_vs_t.png")
         plt.close()
 
     def vel_vs_t(self):
@@ -46,7 +51,7 @@ class Plotter:
         plt.xlabel("Time (ms)")
         plt.ylabel("Vertical Velocity (m/s)")
         plt.title("Velocity vs Time")
-        plt.savefig("velocity_vs_time.png")
+        plt.savefig(PLOT_DIR / "vel_vs_t.png")
         plt.close()
 
     def acc_mag_vs_t(self):
@@ -54,6 +59,6 @@ class Plotter:
         plt.xlabel("Time (ms)")
         plt.ylabel("Acceleration Magnitude (m/s²)")
         plt.title("Acceleration Magnitude vs Time")
-        plt.savefig("acc_mag_vs_time.png")
+        plt.savefig(PLOT_DIR / "acc_vs_t.png")
         plt.close()
 

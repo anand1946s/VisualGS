@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-visualgs = "ui.cli2:main"
+visualgs = "ui.cli:main"
 
 [tool.setuptools]
 packages = ["ui", "telemetry", "health"]
