@@ -80,12 +80,11 @@ All these features can be attaoined through menu driven commands also
 ## Project Structure
 
 VisualGS/
-├── ui/ # CLI entry points and interactive menus
-├── telemetry/ # Telemetry parsing, replay, plotting
-├── health/ # Health packet handling
-├── examples/ # Sample datasets
-├── start.bat # Windows bootstrap script
-├── pyproject.toml # Project metadata and dependencies
+├── ui/
+├── telemetry/
+├── health/
+├── start.bat
+├── pyproject.toml
 └── README.md
 
 
