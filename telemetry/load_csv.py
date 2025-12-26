@@ -46,19 +46,22 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
                         vel = 0.0
 
                     alt = packet.altitude()
-                    print(
-                            f"T={packet.t:6d} ms | "
-                            f"ALT={alt:7.1f} m | "
-                            f"VEL={vel:+6.2f} m/s | "
-                            " STATE = ---"
+                    status = (
+                        f"T={packet.t:6d} ms | "
+                        f"ALT={alt:7.1f} m | "
+                        f"VEL={vel:+8.2f} m/s | "
+                        "STATE=---"
+                    )
 
-                        )
+                    update_status_line(status)
                     prev_packet = packet
 
 
                 else:
                     #print("reject")
                     stati.reject(packet)
+
+            print()
 
     elif mode == "serial":
         print("Waiting for USB...")
