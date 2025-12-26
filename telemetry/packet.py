@@ -1,10 +1,12 @@
 class Packet:
-    def __init__(self,t,pre,ax,ay,az):
+    def __init__(self,t,pre,ax,ay,az,lat= None,lon = None):
         self.t = t
         self.pre = pre
         self.ax = ax
         self.ay = ay
         self.az = az
+        self.lat = lat
+        self. lon = lon
 
 
     def validate(self):

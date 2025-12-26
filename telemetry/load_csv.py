@@ -15,6 +15,8 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
 
         os.system("cls" if os.name == "nt" else "clear")
         draw_flight_box()
+        last_lat = None
+        last_lon = None
 
         prev_t = None
         prev_packet = None
@@ -30,7 +32,12 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
                     stati.malformed()
                     continue
 
-                packet = Packet(data["t"], data["pre"], data["ax"], data["ay"], data["az"])
+                packet = Packet(data["t"], data["pre"], data["ax"], data["ay"], data["az"],data["lat"],data["lon"])
+
+                if packet.lat is not None and packet.lon is not None:
+                    last_lat = packet.lat
+                    last_lon = packet.lon
+
 
                 if prev_t is not None:
                     dt = packet.t - prev_t
@@ -52,11 +59,13 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
                     )
 
                     update_flight_box(
-                        t=packet.t,
-                        alt=alt,
-                        vel=vel,
-                        state=state
-                    )
+                            t=packet.t,
+                            alt=alt,
+                            vel=vel,
+                            state=state,
+                            lat=last_lat,
+                            lon=last_lon
+                        )
 
                     
                     prev_vel = vel
@@ -151,6 +160,8 @@ def csv_to_dict(row):
             "ax": float(row[2]),
             "ay": float(row[3]),
             "az": float(row[4]),
+            "lat": float(row[5]) if len(row) > 5 and row[5] else None,
+            "lon": float(row[6]) if len(row) > 6 and row[6] else None,
         }
     except (ValueError, IndexError):
         return None
@@ -199,31 +210,30 @@ def detect_flight_state(alt, vel, prev_vel):
 
 
 def draw_flight_box():
-    print("┌──────────────────────────────────────────────────────┐")
-    print("│              VISUALGS — FLIGHT MONITOR               │")
-    print("├──────────────────────────────────────────────────────┤")
-    print("│ Time     :                                           │")
-    print("│ Altitude :                                           │")
-    print("│ Velocity :                                           │")
-    print("│ State    :                                           │")
-    print("│                                                      │")
-    print("│ Press Ctrl+C to stop                                 │")
-    print("└──────────────────────────────────────────────────────┘")
+    print("+------------------------------------------------------+")
+    print("|              VISUALGS - FLIGHT MONITOR               |")
+    print("+------------------------------------------------------+")
+    print("| Time     :                                           |")
+    print("| Altitude :                                           |")
+    print("| Velocity :                                           |")
+    print("| GPS      :                                           |")
+    print("| State    :                                           |")
+    print("|                                                      |")
+    print("| Press Ctrl+C to stop                                 |")
+    print("+------------------------------------------------------+")
 
 
-def update_flight_box(t, alt, vel, state="---"):
-    """
-    Update telemetry values inside the static flight box.
-    Assumes cursor is currently below the box.
-    """
-    # Move cursor up to the 'Time' line (6 lines up)
-    sys.stdout.write("\033[6A")
+def update_flight_box(t, alt, vel, state="---", lat=None, lon=None):
+    gps = f"{lat:.5f}, {lon:.5f}" if lat is not None and lon is not None else "---"
 
-    sys.stdout.write(f"\r│ Time     : {t:8d} ms{' ' * 30}│\n")
-    sys.stdout.write(f"│ Altitude : {alt:8.1f} m{' ' * 31}│\n")
-    sys.stdout.write(f"│ Velocity : {vel:8.2f} m/s{' ' * 28}│\n")
-    sys.stdout.write(f"│ State    : {state:<10}{' ' * 29}│\n")
+    # Move cursor to the "Time" line
+    sys.stdout.write("\033[8A")
 
-    # Move cursor back down below the box
+    sys.stdout.write(f"| Time     : {t:8d} ms{' ' * 30}|\n")
+    sys.stdout.write(f"| Altitude : {alt:8.1f} m{' ' * 31}|\n")
+    sys.stdout.write(f"| Velocity : {vel:8.2f} m/s{' ' * 28}|\n")
+    sys.stdout.write(f"| GPS      : {gps:<38}|\n")
+    sys.stdout.write(f"| State    : {state:<10}{' ' * 29}|\n")
+
     sys.stdout.write("\033[2B")
     sys.stdout.flush()
