@@ -28,7 +28,7 @@ def run_replay():
             print("File Not Found !!!")
             return
 
-        speed = float(input("Enter speed in x"))
+        speed = float(input("Enter speed in x: "))
         if speed <= 0:
             print("Speed must be positive")
             return

@@ -28,13 +28,7 @@ cls
 REM ---------------------------------------
 REM Welcome Screen (ASCII-safe)
 REM ---------------------------------------
-
-echo  ########################################
-echo  #                                      #
-echo  #              VISUALGS                #
-echo  #        ROCKET GROUND STATION         #
-echo  #                                      #
-echo  ########################################
+type banner.txt
 echo.
 echo  Environment ready.
 echo.

@@ -3,6 +3,9 @@
 VisualGS is a Python-based ground station software for model rocketry.  
 It supports live telemetry over serial, replay of recorded flight data, and basic offline analysis.
 
+
+VisualGS is intentionally CLI-first and hardware-agnostic; live telemetry can be tested entirely via replay mode.
+
 ---
 
 ## Features
