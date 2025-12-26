@@ -1,4 +1,4 @@
-import csv , time
+import csv , time, os, sys
 from .packet import Packet
 from .stati import Packetstat
 from .plotter import Plotter
@@ -11,57 +11,61 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
     accepted_packets = []
 
 
-    if mode == "replay" :
+    if mode == "replay":
+
+        os.system("cls" if os.name == "nt" else "clear")
+        draw_flight_box()
+
         prev_t = None
         prev_packet = None
+        prev_vel = 0.0
+
         with open(filepath, "r") as f:
             reader = csv.reader(f)
-            next(reader)  
-    
+            next(reader)
+
             for row in reader:
                 data = csv_to_dict(row)
-
-                if data is None:  # for malformed packets , csv_to_dict returns empty list
+                if data is None:
                     stati.malformed()
-                    
                     continue
 
-                packet = Packet(data["t"],data["pre"],data["ax"],data["ay"],data["az"])
+                packet = Packet(data["t"], data["pre"], data["ax"], data["ay"], data["az"])
 
                 if prev_t is not None:
                     dt = packet.t - prev_t
-                    if dt >0:
-                        time.sleep((dt/speed)/1000)
+                    if dt > 0:
+                        time.sleep((dt / speed) / 1000)
                 prev_t = packet.t
 
                 if packet.validate():
-                    #alti = packet.altitude()
-                    #print(alti)
                     stati.accept(packet)
                     accepted_packets.append(packet)
 
-                    if prev_packet is not None:
-                        vel = compute_velocity(prev_packet, packet)
-                    else:
-                        vel = 0.0
-
+                    vel = compute_velocity(prev_packet, packet) if prev_packet else 0.0
                     alt = packet.altitude()
-                    status = (
-                        f"T={packet.t:6d} ms | "
-                        f"ALT={alt:7.1f} m | "
-                        f"VEL={vel:+8.2f} m/s | "
-                        "STATE=---"
+
+                    state = detect_flight_state(
+                    alt=packet.altitude(),
+                    vel=vel,
+                    prev_vel=prev_vel
                     )
 
-                    update_status_line(status)
+                    update_flight_box(
+                        t=packet.t,
+                        alt=alt,
+                        vel=vel,
+                        state=state
+                    )
+
+                    
+                    prev_vel = vel
+
                     prev_packet = packet
-
-
                 else:
-                    #print("reject")
                     stati.reject(packet)
 
-            print()
+        print()  # finalize box before summary
 
     elif mode == "serial":
         print("Waiting for USB...")
@@ -105,9 +109,9 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
                 if packet.validate():
                     stati.accept(packet)
                     status = (
-                            f"T={packet.t:6d} ms | "
-                            f"PRE={packet.pre:7.0f} Pa | "
-                            f"AZ={packet.az:+6.2f} m/s² | "
+                            f"T={packet.t:6d} ms "
+                            f"PRE={packet.pre:7.0f} Pa  "
+                            f"AZ={packet.az:+6.2f} m/s²  "
                             f"LINK=OK"
                         )
                     
@@ -165,3 +169,61 @@ def compute_velocity(prev_packet, curr_packet):
     h2 = curr_packet.altitude()
 
     return (h2 - h1) / dt
+
+
+def detect_flight_state(alt, vel, prev_vel):
+    """
+    Determine flight state from altitude and vertical velocity.
+    """
+
+    # Tunable thresholds (keep conservative)
+    VEL_EPS = 2.0      # m/s
+    ALT_EPS = 5.0      # meters
+
+    if alt < ALT_EPS and abs(vel) < VEL_EPS:
+        return "LANDED"
+
+    if vel > 20:
+        return "BOOST"
+
+    if vel > VEL_EPS and vel < prev_vel:
+        return "COAST"
+
+    if abs(vel) <= VEL_EPS:
+        return "APOGEE"
+
+    if vel < -VEL_EPS:
+        return "DESCENT"
+
+    return "IDLE"
+
+
+def draw_flight_box():
+    print("┌──────────────────────────────────────────────────────┐")
+    print("│              VISUALGS — FLIGHT MONITOR               │")
+    print("├──────────────────────────────────────────────────────┤")
+    print("│ Time     :                                           │")
+    print("│ Altitude :                                           │")
+    print("│ Velocity :                                           │")
+    print("│ State    :                                           │")
+    print("│                                                      │")
+    print("│ Press Ctrl+C to stop                                 │")
+    print("└──────────────────────────────────────────────────────┘")
+
+
+def update_flight_box(t, alt, vel, state="---"):
+    """
+    Update telemetry values inside the static flight box.
+    Assumes cursor is currently below the box.
+    """
+    # Move cursor up to the 'Time' line (6 lines up)
+    sys.stdout.write("\033[6A")
+
+    sys.stdout.write(f"\r│ Time     : {t:8d} ms{' ' * 30}│\n")
+    sys.stdout.write(f"│ Altitude : {alt:8.1f} m{' ' * 31}│\n")
+    sys.stdout.write(f"│ Velocity : {vel:8.2f} m/s{' ' * 28}│\n")
+    sys.stdout.write(f"│ State    : {state:<10}{' ' * 29}│\n")
+
+    # Move cursor back down below the box
+    sys.stdout.write("\033[2B")
+    sys.stdout.flush()
