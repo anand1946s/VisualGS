@@ -1,59 +1,97 @@
 # VisualGS
 
-VisualGS is a Python-based ground station software for processing, validating, and replaying rocket telemetry data.
+VisualGS is a Python-based ground station software for model rocketry.  
+It supports live telemetry over serial, replay of recorded flight data, and basic offline analysis.
+
+---
 
 ## Features
 
-- Parses raw telemetry packets
-- Validates packets and separates accepted/rejected data
-- Generates basic plots
-- Supports **replay of telemetry CSVs with real-time speed control**
-- Uses the same pipeline for replay and live serial data
+- Live telemetry over serial
+- Replay telemetry from CSV with adjustable speed
+- Health packet monitoring
+- Offline plots (pressure, altitude, velocity)
+
+---
 
 ## Requirements
 
-- Python 3.10+
-- Works on Windows (serial via COM ports)
+- Windows
+- Python 3.10 or newer
+
+No additional tools are required.
+
+---
+
+## Quick Start
+
+## Note
+Currently this tool expects data in the CSV format
+
+[time,pre,ax,ay,az]
+
+The input source must be tuned for that.
 
 
-## Setup
 
-Clone the repository:
-
+### 1. Clone the repository
 ```bash
-git clone https://github.com/<your-username>/VisualGS.git
+git clone <git@github.com:anand1946s/VisualGS.git>
 cd VisualGS
 ```
-
-Create and activate a virtual environment (recommended):
-
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-
-
-### 5. How to run replay (your killer feature)
-
-This section is what makes your project usable.
-
-```md
-## Running Telemetry Replay
-
-Prepare a CSV file with the format:
-
-t,pre,ax,ay,az
-
-Example timestamps are in milliseconds.
-
-Run the CLI:
+### 2.  Run the File
 
 ```bash
-python -m ui.cli
+start.bat
+```
+This will start the application, install dependencies,create virtual environment and waits for instruction
+
+
+## How To Use
+
+After setting up run
+
+```bash
+visualgs run
 ```
 
+this will open up an interactive menu to use custom features
 
-## Design Philosophy
 
-- Raw telemetry is never trusted
-- Validation happens before visualization
-- Replay and live telemetry share the same processing pipeline
-- Time fidelity is preserved during replay
+```bash
+visualgs live
+```
+This will directly open COM port and waits for data packets to arrive
+
+```bash
+visualgs replay <filepath> --speed <speed>
+```
+Will start replay a custom dataset of a flight with specified speed
+
+```bash
+visualgs health
+```
+To recieve healthdata packets and evaulate mission readiness  pre-flight
+
+All these features can be attaoined through menu driven commands also
+
+
+
+## Project Structure
+
+VisualGS/
+├── ui/ # CLI entry points and interactive menus
+├── telemetry/ # Telemetry parsing, replay, plotting
+├── health/ # Health packet handling
+├── examples/ # Sample datasets
+├── start.bat # Windows bootstrap script
+├── pyproject.toml # Project metadata and dependencies
+└── README.md
+
+
+Generated at runtime (not committed):
+- `.venv/`
+- `.visualgs/`
+- `datasets/`
+- `plots/`
+

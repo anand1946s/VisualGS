@@ -1,18 +1,10 @@
 @echo off
 title VisualGS Console
 
-REM -------------------------------
-REM Banner
-REM -------------------------------
-echo.
-echo ======================================
-echo      VisualGS - Ground Station
-echo ======================================
-echo.
+REM ---------------------------------------
+REM Bootstrap environment
+REM ---------------------------------------
 
-REM -------------------------------
-REM Check Python
-REM -------------------------------
 python --version >nul 2>&1
 if errorlevel 1 (
     echo Python not found.
@@ -21,32 +13,40 @@ if errorlevel 1 (
     exit /b
 )
 
-REM -------------------------------
-REM Create venv if missing
-REM -------------------------------
 if not exist .venv (
     echo Creating virtual environment...
     python -m venv .venv
-
-    call .venv\Scripts\activate
-
-    echo Installing dependencies...
-    python -m pip install --upgrade pip
-    pip install -e .
-) else (
-    call .venv\Scripts\activate
 )
 
-REM -------------------------------
-REM Ready state
-REM -------------------------------
+call .venv\Scripts\activate
+
+pip install --upgrade pip >nul
+pip install -e . >nul
+
+cls
+
+REM ---------------------------------------
+REM Welcome Screen (ASCII-safe)
+REM ---------------------------------------
+
+echo  ########################################
+echo  #                                      #
+echo  #              VISUALGS                #
+echo  #        ROCKET GROUND STATION         #
+echo  #                                      #
+echo  ########################################
 echo.
-echo Environment ready.
-echo Type:
-echo   visualgs run
-echo   visualgs replay dataset.csv --speed 2
-echo   visualgs --help
+echo  Environment ready.
+echo.
+echo  Commands:
+echo    visualgs run
+echo    visualgs replay dataset.csv --speed 2
+echo    visualgs --help
+echo.
+echo  Press Ctrl+C to exit.
 echo.
 
-REM Drop user into active shell
+REM ---------------------------------------
+REM Hand control to user
+REM ---------------------------------------
 cmd /k
