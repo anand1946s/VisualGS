@@ -1,5 +1,11 @@
-import serial
+import serial , sys , time 
+from serial.tools import list_ports
 from .packet import Packet  
+
+
+
+_last_ui_update = 0.0   
+
 
 class Serialize:
     def __init__(self,port,baudrate = 9600, timeout=1):
@@ -42,4 +48,29 @@ class Serialize:
 
         finally:
             self.close()
+
+def find_ports():
+    ports = list(list_ports.comports())
+
+    if not ports:
+        print("No serial devices detected.")
+        return []
+
+    print("Available serial ports:")
+    for i, port in enumerate(ports, start=1):
+        desc = port.description if port.description else "Unknown device"
+        print(f"  [{i}] {port.device} — {desc}")
+
+    return ports
     
+
+def update_status_line(text, min_interval=0.1):
+    
+        global _last_ui_update
+        now = time.time()
+        if now - _last_ui_update < min_interval:
+            return
+        _last_ui_update = now
+
+        sys.stdout.write("\r" + text)
+        sys.stdout.flush()   

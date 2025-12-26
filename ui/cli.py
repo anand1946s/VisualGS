@@ -12,21 +12,38 @@ from telemetry.load_csv import run_csv
 
 
 while True:
-    print("=== Telemetry Processor ===")
-    print("1: Run Replay")
-    print("2: Live Serial")
-    print("3: Run Health Checkup")
-    print("4: Exit")
+    print("==================================================")
+    print("VisualGS = Ground Station Launcher")
+    print("==================================================")
+    print("\n")
+    print("Select an operation mode: ")
+    print("\n")
+    print("1. Live Serial")
+    print("2. Replay Flight Data (CSV)")
+    print("3. Health Check")
+    print("4. Exit")
+    print("\n")
 
     try:
-        choice = int(input("Enter a choice: "))
+        choice = int(input("Enter choice [1–4]:"))
     except ValueError:
         print("(WARNING) Enter valid choice")
         continue
 
-    if choice == 1:
+    if choice == 2:
+        print("--------------------------------------------------")
+        print("Replay Mode - Flight Data  ")
+        print("--------------------------------------------------")
         try:
+            datapath = input("Enter File path : ").strip()
+
+            patha = Path(datapath)
+            if not patha.is_file():
+                print("File Not Found !!!")
+                continue
+
             speed = float(input ("Enter speed in x"))
+
         except ValueError:
             print("Require valid input !!!")
             continue
@@ -35,10 +52,14 @@ while True:
             continue
         
 
-        run_csv(mode = "replay", filepath="telemetry/dataset.csv" , speed = speed)
+        run_csv(mode = "replay", filepath=str(patha) , speed = speed)
 
-    elif choice == 2:
-        print("Reading live serial data...  ")
+    elif choice == 1:
+        print("--------------------------------------------------")
+        print("Live Telemetry Mode  ")
+        print("--------------------------------------------------")
+        print("\n")
+        print("Scanning serial ports ...")
         run_csv(mode = "serial")  
 
     elif choice == 3:

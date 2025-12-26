@@ -3,6 +3,7 @@ from .packet import Packet
 from .stati import Packetstat
 from .plotter import Plotter
 from .serialize import Serialize
+from .serialize import find_ports , update_status_line
 
 
 def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
@@ -12,15 +13,17 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
 
     if mode == "replay" :
         prev_t = None
+        prev_packet = None
         with open(filepath, "r") as f:
             reader = csv.reader(f)
-            next(reader)  # skip header
+            next(reader)  
     
             for row in reader:
                 data = csv_to_dict(row)
 
-                if data is None:
-                    print("reject: malformed row")
+                if data is None:  # for malformed packets , csv_to_dict returns empty list
+                    stati.malformed()
+                    
                     continue
 
                 packet = Packet(data["t"],data["pre"],data["ax"],data["ay"],data["az"])
@@ -37,47 +40,100 @@ def run_csv(mode = "replay",filepath = "dataset.csv", speed = 1.0):
                     stati.accept(packet)
                     accepted_packets.append(packet)
 
-                    #print(f"time={packet.t} ms | pre={packet.pre} Pa | ax={packet.ax} | ay={packet.ay} | az={packet.az}")
+                    if prev_packet is not None:
+                        vel = compute_velocity(prev_packet, packet)
+                    else:
+                        vel = 0.0
+
+                    alt = packet.altitude()
+                    print(
+                            f"T={packet.t:6d} ms | "
+                            f"ALT={alt:7.1f} m | "
+                            f"VEL={vel:+6.2f} m/s | "
+                            " STATE = ---"
+
+                        )
+                    prev_packet = packet
 
 
                 else:
-                    print("reject")
+                    #print("reject")
                     stati.reject(packet)
 
     elif mode == "serial":
         print("Waiting for USB...")
-        # next we implement cli to recieve com and baud grm  user
-        com = input("Enter COM No: ")
+
+        ports = find_ports()
+        if not ports:
+            return   
+
+        if len(ports) == 1:
+            port_name = ports[0].device
+            print(f"Using {port_name}")
+        else:
+            try:
+                choice = int(input("Select port number: "))
+                port_name = ports[choice - 1].device
+            except (ValueError, IndexError):
+                print("Invalid port selection")
+                return
+
+        
         try:
-            baud = int(input("Enter baudrate"))
+            baud = int(input("Enter baudrate: "))
         except ValueError:
             print("Enter valid number")
             return
 
-        seri = Serialize(port = f"COM{com}",baudrate=baud)   
+        seri = Serialize(port=port_name, baudrate=baud)
+
+        
         try:
             seri.open()
         except RuntimeError:
-            print("Access Denied to COM!!!")
+            print(f"Access denied to {port_name}")
             return
+
+        print("Serial link established. Waiting for data...")
+
         
         try:
             for packet in seri.packets():
                 if packet.validate():
                     stati.accept(packet)
+                    status = (
+                            f"T={packet.t:6d} ms | "
+                            f"PRE={packet.pre:7.0f} Pa | "
+                            f"AZ={packet.az:+6.2f} m/s² | "
+                            f"LINK=OK"
+                        )
+                    
+                    update_status_line(status)   # to update in realtime(not spamming)
+                    
                     accepted_packets.append(packet)
                 else:
-                    stati.reject(packet)  
-             
+                    stati.reject(packet)
+
         except KeyboardInterrupt:
-            print("Stopping Serial...")
+            print("\nStopping Serial...")
+
         finally:
-            seri.close()   
+            seri.close()
 
-
+    
     plot_instance = Plotter(accepted_packets)
-    plot_instance.pre_vs_t()
+    
     stati.summary()
+
+    print("\n")
+    print("=======================")
+    print( " Generating Plots ...")
+    print("=======================")
+    print("\n \n")
+    plot_instance.pre_vs_t()
+    plot_instance.acc_mag_vs_t()
+    plot_instance.alt_vs_t()
+    plot_instance.vel_vs_t()
 
 
 def csv_to_dict(row):
@@ -91,3 +147,18 @@ def csv_to_dict(row):
         }
     except (ValueError, IndexError):
         return None
+
+
+def compute_velocity(prev_packet, curr_packet):
+    """
+    Compute vertical velocity (m/s) from pressure-derived altitude.
+    Uses two packets.
+    """
+    dt = (curr_packet.t - prev_packet.t) / 1000.0  # ms → s
+    if dt <= 0:
+        return 0.0
+
+    h1 = prev_packet.altitude()
+    h2 = curr_packet.altitude()
+
+    return (h2 - h1) / dt

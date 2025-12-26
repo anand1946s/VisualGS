@@ -1,183 +1,59 @@
-Telemetry Data Cleaner & Analyzer
+# VisualGS
 
-This project is a ground-side telemetry processing tool built to handle raw rocket (or similar embedded system) telemetry data.
+VisualGS is a Python-based ground station software for processing, validating, and replaying rocket telemetry data.
 
-The goal is simple and strict:
+## Features
 
-Never trust raw telemetry.
-Validate it, separate good data from bad data, and make the results usable.
+- Parses raw telemetry packets
+- Validates packets and separates accepted/rejected data
+- Generates basic plots
+- Supports **replay of telemetry CSVs with real-time speed control**
+- Uses the same pipeline for replay and live serial data
 
-This tool focuses on correctness, robustness, and clarity before visualization or UI.
+## Requirements
 
-What this project does
-
-Given a CSV file containing raw telemetry data, the tool:
-
-Ingests raw data
-
-Converts it into typed packets
-
-Validates each packet
-
-Separates good and bad packets
-
-Writes results to clean output files
-
-Generates run statistics
-
-Optionally derives altitude from pressure
-
-Input format
-
-The input CSV must contain the following columns:
-
-t,pre,ax,ay,az
+- Python 3.10+
+- Works on Windows (serial via COM ports)
 
 
-Where:
+## Setup
 
-t → timestamp (int, ms since boot)
+Clone the repository:
 
-pre → pressure (Pa)
+```bash
+git clone https://github.com/<your-username>/VisualGS.git
+cd VisualGS
+```
 
-ax → acceleration x
+Create and activate a virtual environment (recommended):
 
-ay → acceleration y
+python -m venv .venv
+.venv\Scripts\activate   # Windows
 
-az → acceleration z
 
-Example:
+### 5. How to run replay (your killer feature)
+
+This section is what makes your project usable.
+
+```md
+## Running Telemetry Replay
+
+Prepare a CSV file with the format:
 
 t,pre,ax,ay,az
-0,101325,0.01,-0.02,9.78
-20,101320,0.05,-0.01,9.80
+
+Example timestamps are in milliseconds.
+
+Run the CLI:
+
+```bash
+python -m ui.cli
+```
 
 
-Malformed rows or invalid values are expected and handled.
+## Design Philosophy
 
-Output files
-
-After running, the tool generates:
-
-accept.csv
-
-Contains only valid packets.
-
-t,pre,ax,ay,az
-0,101325,0.01,-0.02,9.78
-20,101320,0.05,-0.01,9.80
-
-reject.csv
-
-Contains invalid packets + rejection reason.
-
-t,pre,ax,ay,az,error
-140,-100900,4.20,0.08,12.30,Negative or zero pressure
-
-Console summary
-
-At the end of each run, a summary is printed:
-
---- Packet Statistics ---
-Total     : 14
-Accepted  : 10
-Rejected  : 4
-
-
-This gives immediate insight into telemetry quality.
-
-Project structure
-telemetry/
-├── load_csv.py      # Main driver (orchestration)
-├── packet.py        # Packet data model + validation + altitude
-├── stati.py         # Statistics + CSV writing
-├── dataset.csv      # Input telemetry file
-├── accept.csv       # Output: valid packets
-├── reject.csv       # Output: rejected packets
-└── README.md
-
-Design principle
-
-Each file has one responsibility:
-
-packet.py → what a packet is and whether it is valid
-
-stati.py → recording results and writing outputs
-
-load_csv.py → wiring everything together
-
-Validation logic (current)
-
-A packet is rejected if:
-
-timestamp is negative
-
-pressure is zero or negative
-
-values are malformed or missing
-
-Each rejected packet carries a human-readable error reason.
-
-Validation is intentionally conservative and can be extended later.
-
-Altitude calculation
-
-For accepted packets, altitude can be derived using the barometric formula:
-
-ℎ
-=
-44330
-⋅
-(
-1
-−
-(
-𝑝
-𝑝
-0
-)
-0.1903
-)
-h=44330⋅(1−(
-p
-0
-	​
-
-p
-	​
-
-)
-0.1903
-)
-
-Where:
-
-p = packet pressure
-
-p0 = 101325 Pa (sea-level reference)
-
-This is optional and kept separate from validation.
-
-How to run
-
-From the project directory:
-
-python load_csv.py
-
-
-Requirements:
-
-Python 3.10+
-
-No external libraries required
-
-Why this project exists
-
-This project was built to solve a real engineering problem:
-
-Raw telemetry is noisy, unreliable, and often misleading.
-Analysis, visualization, or control logic built on bad data is worse than useless.
-
-This tool enforces a clean boundary:
-
-Only trusted data moves forward.
+- Raw telemetry is never trusted
+- Validation happens before visualization
+- Replay and live telemetry share the same processing pipeline
+- Time fidelity is preserved during replay
